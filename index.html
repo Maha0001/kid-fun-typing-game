@@ -8,14 +8,14 @@
     body {
       font-family: 'Comic Sans MS', cursive;
       text-align: center;
-      /* Use local universe image as background */
+      /* Local universe image as background */
       background: url('universe.jpeg') no-repeat center center fixed;
       background-size: cover;
       margin: 20px;
     }
     h1 {
       font-size: 36px;
-      color: #fff; /* white heading for contrast */
+      color: #fff; /* White heading for contrast */
     }
     #editor {
       /* No border or outline */
@@ -62,7 +62,7 @@
 </head>
 <body>
   <h1>Kid’s Fun Typing Game</h1>
-  <!-- The editor is contenteditable so mobile keyboards appear -->
+  <!-- The editor is contenteditable so that mobile keyboards appear -->
   <div id="editor" contenteditable="true"></div>
 
   <!-- Giggling sound effect -->
@@ -72,7 +72,7 @@
     const editor = document.getElementById('editor');
     const giggleSound = document.getElementById('giggleSound');
 
-    // Fun styling arrays and mappings.
+    // Arrays and mappings for fun effects.
     const colors = ['#ff6347', '#4682b4', '#32cd32', '#ff69b4', '#ffa500', '#9932cc'];
     const emojiEffects = {
       'A': '🍎', 'B': '🐝', 'C': '🐱', 'D': '🐶', 'E': '🥚', 'F': '🐟', 'G': '🎸', 'H': '🏠', 'I': '🍦',
@@ -139,7 +139,7 @@
       return span;
     }
 
-    // Places the caret at the end of the editor.
+    // Place the caret at the end of the editor.
     function placeCaretAtEnd(el) {
       el.focus();
       if (typeof window.getSelection !== "undefined" && typeof document.createRange !== "undefined") {
@@ -152,7 +152,7 @@
       }
     }
 
-    // Render the typedChars array into the editor.
+    // Render the content of the editor from the typedChars array.
     function renderEditor() {
       editor.innerHTML = '';
       if (typedChars.length === 0) {
@@ -166,13 +166,13 @@
       placeCaretAtEnd(editor);
     }
 
-    // Plays the giggling sound.
+    // Play giggling sound.
     function playGiggleSound() {
       giggleSound.currentTime = 0;
       giggleSound.play();
     }
 
-    // Handler for beforeinput (modern browsers)
+    // Handler for beforeinput event (modern browsers).
     function handleBeforeInput(e) {
       e.preventDefault();
       if (e.inputType === 'insertText' && e.data && e.data.length === 1) {
@@ -203,13 +203,13 @@
       }
     }
 
-    // Fallback handler using the input event (for older Android versions)
+    // Fallback handler using the input event for older Android devices.
+    // Now using editor.textContent to capture both letters and numbers.
     function handleInputFallback(e) {
-      // Get the new text from the editor.
-      let newText = editor.innerText;
+      let newText = editor.textContent;
       let oldText = typedChars.map(item => item.char).join('');
       if (newText === oldText) return;
-      // Simple diff: assume appending or deletion at the end.
+      // For simplicity, assume changes occur at the end.
       if (newText.length > oldText.length) {
         let added = newText.substring(oldText.length);
         for (let char of added) {
@@ -240,15 +240,14 @@
     }
 
     // Set up event listeners:
-    // Use beforeinput if available; otherwise fallback to input.
+    // Use beforeinput if available; otherwise, use the fallback input event.
     if ('onbeforeinput' in editor) {
       editor.addEventListener('beforeinput', handleBeforeInput);
     } else {
       editor.addEventListener('input', handleInputFallback);
     }
 
-    // Also attach a fallback for the keydown event for Backspace
-    // in case input event isn't fired.
+    // Also attach a keydown listener for Backspace and Enter as extra protection.
     editor.addEventListener('keydown', function(e) {
       if (e.key === "Backspace") {
         e.preventDefault();
@@ -262,7 +261,7 @@
       }
     });
 
-    // Focus the editor on load and initialize with placeholder text.
+    // Focus the editor on load.
     editor.focus();
     renderEditor();
   </script>
