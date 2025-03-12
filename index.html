@@ -15,7 +15,7 @@
     }
     h1 {
       font-size: 36px;
-      color: #fff; /* White heading for contrast */
+      color: #fff; /* white heading for contrast */
     }
     #editor {
       /* No border or outline */
@@ -119,7 +119,7 @@
       '9': 'Nine'
     };
 
-    // This array holds the objects representing each character.
+    // Array to hold objects representing each character.
     let typedChars = [];
 
     // Create a styled span (or <br> for newlines) from a character object.
@@ -142,7 +142,7 @@
     // Place the caret at the end of the editor.
     function placeCaretAtEnd(el) {
       el.focus();
-      if (typeof window.getSelection !== "undefined" && typeof document.createRange !== "undefined") {
+      if (window.getSelection && document.createRange) {
         let range = document.createRange();
         range.selectNodeContents(el);
         range.collapse(false);
@@ -152,7 +152,7 @@
       }
     }
 
-    // Render the content of the editor from the typedChars array.
+    // Render the content of the editor based on typedChars.
     function renderEditor() {
       editor.innerHTML = '';
       if (typedChars.length === 0) {
@@ -162,11 +162,11 @@
           editor.appendChild(createStyledSpan(item));
         });
       }
-      // Always move caret to the end.
+      // Always move the caret to the end.
       placeCaretAtEnd(editor);
     }
 
-    // Play giggling sound.
+    // Play the giggling sound.
     function playGiggleSound() {
       giggleSound.currentTime = 0;
       giggleSound.play();
@@ -203,13 +203,13 @@
       }
     }
 
-    // Fallback handler using the input event for older Android devices.
-    // Now using editor.textContent to capture both letters and numbers.
+    // Fallback handler using the input event for older Android.
+    // Using textContent here to capture all letters and numbers.
     function handleInputFallback(e) {
       let newText = editor.textContent;
       let oldText = typedChars.map(item => item.char).join('');
       if (newText === oldText) return;
-      // For simplicity, assume changes occur at the end.
+      // For simplicity, assume changes are at the end.
       if (newText.length > oldText.length) {
         let added = newText.substring(oldText.length);
         for (let char of added) {
@@ -239,15 +239,44 @@
       renderEditor();
     }
 
+    // New: Listen for compositionend events.
+    // On compositionend, re-parse the editor's content from scratch.
+    editor.addEventListener('compositionend', function(e) {
+      // Grab the final text from the editor.
+      let finalText = editor.textContent;
+      // Reset typedChars.
+      typedChars = [];
+      for (let char of finalText) {
+        if (char === "\n") {
+          typedChars.push({ char: "\n", special: true });
+        } else if (/[a-zA-Z0-9]/.test(char)) {
+          const upperChar = char.toUpperCase();
+          const randomColor = colors[Math.floor(Math.random() * colors.length)];
+          const emoji = emojiEffects[upperChar] || '';
+          const friendlyText = friendlyMapping[upperChar] || upperChar;
+          typedChars.push({
+            char: upperChar,
+            color: randomColor,
+            emoji: emoji,
+            mapping: friendlyText,
+            special: false
+          });
+        } else {
+          typedChars.push({ char: char, special: true });
+        }
+      }
+      renderEditor();
+    });
+
     // Set up event listeners:
-    // Use beforeinput if available; otherwise, use the fallback input event.
+    // Use beforeinput if available; otherwise, fallback to input event.
     if ('onbeforeinput' in editor) {
       editor.addEventListener('beforeinput', handleBeforeInput);
     } else {
       editor.addEventListener('input', handleInputFallback);
     }
 
-    // Also attach a keydown listener for Backspace and Enter as extra protection.
+    // Also attach keydown for Backspace and Enter as extra protection.
     editor.addEventListener('keydown', function(e) {
       if (e.key === "Backspace") {
         e.preventDefault();
