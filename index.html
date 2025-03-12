@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kid’s Fun Typing Game</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive;
+      text-align: center;
+      background: url('universe.jpeg') no-repeat center center fixed;
+      background-size: cover;
+      margin: 20px;
+    }
+    h1 {
+      font-size: 36px;
+      color: #fff; /* Changed heading color to white */
+    }
+    #editor {
+      /* Removed the dashed border */
+      padding: 20px;
+      min-height: 150px;
+      width: 80%;
+      margin: 20px auto;
+      background-color: #fff;
+      font-size: 40px;
+      overflow: auto;
+    }
+    .char {
+      display: inline-block;
+      padding: 10px;
+      margin: 5px;
+      border-radius: 50%;
+      font-size: 50px;
+      animation: bounce 0.3s ease;
+      vertical-align: top;
+    }
+    @keyframes bounce {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    .placeholder {
+      color: gray;
+      font-size: 30px;
+      opacity: 0.6;
+    }
+    .char small {
+      font-size: 14px;
+      display: block;
+      color: #333;
+    }
+    .char sup {
+      font-size: 20px;
+      margin-left: 4px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Kid’s Fun Typing Game</h1>
+  <div id="editor" contenteditable="false"></div>
+
+  <!-- Giggling sound effect -->
+  <audio id="giggleSound" src="giggle.mp3"></audio>
+
+  <script>
+    const editor = document.getElementById('editor');
+    const giggleSound = document.getElementById('giggleSound');
+
+    // Arrays and mappings for fun effects
+    const colors = ['#ff6347', '#4682b4', '#32cd32', '#ff69b4', '#ffa500', '#9932cc'];
+    const emojiEffects = {
+      'A': '🍎', 'B': '🐝', 'C': '🐱', 'D': '🐶', 'E': '🥚', 'F': '🐟', 'G': '🎸', 'H': '🏠', 'I': '🍦',
+      'J': '🃏', 'K': '🔑', 'L': '🍋', 'M': '🐵', 'N': '🎵', 'O': '🐙', 'P': '🥞', 'Q': '👑', 'R': '🌈',
+      'S': '⭐', 'T': '🐢', 'U': '☂️', 'V': '🎻', 'W': '🌊', 'X': '❌', 'Y': '🍋', 'Z': '⚡',
+      '1': '☝️', '2': '✌️', '3': '🤟', '4': '🍀', '5': '🖐️', '6': '🎲', '7': '🌈', '8': '🎱', '9': '🎵', '0': '💿'
+    };
+    const friendlyMapping = {
+      'A': 'Apple',
+      'B': 'Ball',
+      'C': 'Cat',
+      'D': 'Dog',
+      'E': 'Elephant',
+      'F': 'Fish',
+      'G': 'Giraffe',
+      'H': 'House',
+      'I': 'Igloo',
+      'J': 'Juice',
+      'K': 'Kite',
+      'L': 'Lion',
+      'M': 'Monkey',
+      'N': 'Nest',
+      'O': 'Orange',
+      'P': 'Penguin',
+      'Q': 'Queen',
+      'R': 'Rabbit',
+      'S': 'Sun',
+      'T': 'Tiger',
+      'U': 'Umbrella',
+      'V': 'Violin',
+      'W': 'Whale',
+      'X': 'Xylophone',
+      'Y': 'Yo-yo',
+      'Z': 'Zebra',
+      '0': 'Zero',
+      '1': 'One',
+      '2': 'Two',
+      '3': 'Three',
+      '4': 'Four',
+      '5': 'Five',
+      '6': 'Six',
+      '7': 'Seven',
+      '8': 'Eight',
+      '9': 'Nine'
+    };
+
+    // Array to store each character object
+    let typedChars = [];
+
+    // Create a styled span for each character
+    function createStyledSpan(item) {
+      const span = document.createElement('span');
+      span.className = 'char';
+      // If it's a newline, return a <br> element
+      if (item.char === "\n") {
+        return document.createElement('br');
+      }
+      if (!item.special) {
+        span.innerHTML = item.char + "<br><small>" + item.mapping + "</small><sup>" + item.emoji + "</sup>";
+        span.style.color = item.color;
+        span.style.backgroundColor = item.color + '22';
+      } else {
+        span.textContent = item.char;
+      }
+      return span;
+    }
+
+    // Render the content of the editor
+    function renderEditor() {
+      editor.innerHTML = '';
+      if (typedChars.length === 0) {
+        editor.innerHTML = "<span class='placeholder'>Try typing letters or numbers!</span>";
+      } else {
+        typedChars.forEach(item => {
+          editor.appendChild(createStyledSpan(item));
+        });
+      }
+    }
+
+    // Play giggling sound
+    function playGiggleSound() {
+      giggleSound.currentTime = 0;
+      giggleSound.play();
+    }
+
+    // Listen for keydown events
+    document.addEventListener('keydown', function(e) {
+      // If key is a character (letter, number, punctuation) and not a command key
+      if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        let char = e.key;
+        // If alphanumeric, add fun styling
+        if (/[a-zA-Z0-9]/.test(char)) {
+          const upperChar = char.toUpperCase();
+          const randomColor = colors[Math.floor(Math.random() * colors.length)];
+          const emoji = emojiEffects[upperChar] || '';
+          const friendlyText = friendlyMapping[upperChar] || upperChar;
+          playGiggleSound();
+          typedChars.push({
+            char: upperChar,
+            color: randomColor,
+            emoji: emoji,
+            mapping: friendlyText,
+            special: false
+          });
+        } else {
+          // For non-alphanumeric keys (e.g. space, punctuation)
+          typedChars.push({ char: char, special: true });
+        }
+        renderEditor();
+      }
+      // Backspace deletes the last character
+      if (e.key === "Backspace") {
+        e.preventDefault();
+        typedChars.pop();
+        renderEditor();
+      }
+      // Enter adds a newline
+      if (e.key === "Enter") {
+        e.preventDefault();
+        typedChars.push({ char: "\n", special: true });
+        renderEditor();
+      }
+    });
+
+    // Initialize with placeholder text
+    renderEditor();
+  </script>
+</body>
+</html>
