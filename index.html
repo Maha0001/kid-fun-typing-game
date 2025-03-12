@@ -8,7 +8,7 @@
     body {
       font-family: 'Comic Sans MS', cursive;
       text-align: center;
-      /* Local universe image as background */
+      /* Use local universe image as background */
       background: url('universe.jpeg') no-repeat center center fixed;
       background-size: cover;
       margin: 20px;
@@ -62,7 +62,7 @@
 </head>
 <body>
   <h1>Kid’s Fun Typing Game</h1>
-  <!-- Set editor as contenteditable so that mobile keyboards appear -->
+  <!-- Set editor as contenteditable so mobile keyboards appear -->
   <div id="editor" contenteditable="true"></div>
 
   <!-- Giggling sound effect -->
@@ -163,10 +163,8 @@
           editor.appendChild(createStyledSpan(item));
         });
       }
-      // If there's any text, place the caret at the end.
-      if (typedChars.length > 0) {
-        placeCaretAtEnd(editor);
-      }
+      // Place the caret at the end after rendering.
+      placeCaretAtEnd(editor);
     }
 
     // Play giggling sound.
@@ -175,13 +173,11 @@
       giggleSound.play();
     }
 
-    // Listen for keydown events on the editor.
-    editor.addEventListener('keydown', function(e) {
-      // If key is a character (letter, number, punctuation) and not a command key.
-      if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        let char = e.key;
-        // If alphanumeric, add fun styling.
+    // Use beforeinput event (works well on mobile) to capture and control input.
+    editor.addEventListener('beforeinput', function(e) {
+      e.preventDefault(); // Prevent default behavior so we can manage input manually.
+      if (e.inputType === 'insertText' && e.data && e.data.length === 1) {
+        let char = e.data;
         if (/[a-zA-Z0-9]/.test(char)) {
           const upperChar = char.toUpperCase();
           const randomColor = colors[Math.floor(Math.random() * colors.length)];
@@ -196,26 +192,21 @@
             special: false
           });
         } else {
-          // For non-alphanumeric keys (e.g. space, punctuation).
+          // For non-alphanumeric keys (space, punctuation, etc.)
           typedChars.push({ char: char, special: true });
         }
         renderEditor();
-      }
-      // Backspace deletes the last character.
-      if (e.key === "Backspace") {
-        e.preventDefault();
+      } else if (e.inputType === 'deleteContentBackward') {
         typedChars.pop();
         renderEditor();
-      }
-      // Enter adds a newline.
-      if (e.key === "Enter") {
-        e.preventDefault();
+      } else if (e.inputType === 'insertParagraph') {
+        // Handle Enter as a newline.
         typedChars.push({ char: "\n", special: true });
         renderEditor();
       }
     });
 
-    // Focus the editor on load so that mobile keyboards appear.
+    // Focus the editor on load.
     editor.focus();
     // Initialize with placeholder text.
     renderEditor();
