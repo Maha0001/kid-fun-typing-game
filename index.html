@@ -9,16 +9,16 @@
       font-family: 'Comic Sans MS', cursive;
       text-align: center;
       /* Use local universe image as background */
-      background: url('universe.jpeg') no-repeat center center fixed;
+      background: url('universe.jpg') no-repeat center center fixed;
       background-size: cover;
       margin: 20px;
     }
     h1 {
       font-size: 36px;
-      color: #fff; /* White heading for contrast */
+      color: #fff; /* white heading for contrast */
     }
     #editor {
-      /* Remove border and outline */
+      /* No border or outline */
       border: none;
       outline: none;
       padding: 20px;
@@ -62,17 +62,17 @@
 </head>
 <body>
   <h1>Kid’s Fun Typing Game</h1>
-  <!-- Set editor as contenteditable so mobile keyboards appear -->
+  <!-- The editor is contenteditable so mobile keyboards appear -->
   <div id="editor" contenteditable="true"></div>
 
   <!-- Giggling sound effect -->
-  <audio id="giggleSound" src="giggle.mp3"></audio>
+  <audio id="giggleSound" src="sounds/giggle.mp3"></audio>
 
   <script>
     const editor = document.getElementById('editor');
     const giggleSound = document.getElementById('giggleSound');
 
-    // Arrays and mappings for fun effects.
+    // Fun styling arrays and mappings.
     const colors = ['#ff6347', '#4682b4', '#32cd32', '#ff69b4', '#ffa500', '#9932cc'];
     const emojiEffects = {
       'A': '🍎', 'B': '🐝', 'C': '🐱', 'D': '🐶', 'E': '🥚', 'F': '🐟', 'G': '🎸', 'H': '🏠', 'I': '🍦',
@@ -119,17 +119,16 @@
       '9': 'Nine'
     };
 
-    // Array to store each character object so text persists.
+    // This array holds the objects representing each character.
     let typedChars = [];
 
-    // Create a styled span for each character based on its properties.
+    // Create a styled span (or <br> for newlines) from a character object.
     function createStyledSpan(item) {
-      const span = document.createElement('span');
-      span.className = 'char';
-      // If it's a newline, return a <br> element.
       if (item.char === "\n") {
         return document.createElement('br');
       }
+      const span = document.createElement('span');
+      span.className = 'char';
       if (!item.special) {
         span.innerHTML = item.char + "<br><small>" + item.mapping + "</small><sup>" + item.emoji + "</sup>";
         span.style.color = item.color;
@@ -140,10 +139,10 @@
       return span;
     }
 
-    // Function to set the caret at the end of the editor.
+    // Places the caret at the end of the editor.
     function placeCaretAtEnd(el) {
       el.focus();
-      if (typeof window.getSelection != "undefined" && typeof document.createRange != "undefined") {
+      if (typeof window.getSelection !== "undefined" && typeof document.createRange !== "undefined") {
         let range = document.createRange();
         range.selectNodeContents(el);
         range.collapse(false);
@@ -153,7 +152,7 @@
       }
     }
 
-    // Render the content of the editor from the typedChars array.
+    // Render the typedChars array into the editor.
     function renderEditor() {
       editor.innerHTML = '';
       if (typedChars.length === 0) {
@@ -163,19 +162,19 @@
           editor.appendChild(createStyledSpan(item));
         });
       }
-      // Place the caret at the end after rendering.
+      // Always move caret to the end.
       placeCaretAtEnd(editor);
     }
 
-    // Play giggling sound.
+    // Plays the giggling sound.
     function playGiggleSound() {
       giggleSound.currentTime = 0;
       giggleSound.play();
     }
 
-    // Use beforeinput event (works well on mobile) to capture and control input.
-    editor.addEventListener('beforeinput', function(e) {
-      e.preventDefault(); // Prevent default behavior so we can manage input manually.
+    // Handler for beforeinput (modern browsers)
+    function handleBeforeInput(e) {
+      e.preventDefault();
       if (e.inputType === 'insertText' && e.data && e.data.length === 1) {
         let char = e.data;
         if (/[a-zA-Z0-9]/.test(char)) {
@@ -192,7 +191,6 @@
             special: false
           });
         } else {
-          // For non-alphanumeric keys (space, punctuation, etc.)
           typedChars.push({ char: char, special: true });
         }
         renderEditor();
@@ -200,15 +198,72 @@
         typedChars.pop();
         renderEditor();
       } else if (e.inputType === 'insertParagraph') {
-        // Handle Enter as a newline.
+        typedChars.push({ char: "\n", special: true });
+        renderEditor();
+      }
+    }
+
+    // Fallback handler using the input event (for older Android versions)
+    function handleInputFallback(e) {
+      // Get the new text from the editor.
+      let newText = editor.innerText;
+      let oldText = typedChars.map(item => item.char).join('');
+      if (newText === oldText) return;
+      // Simple diff: assume appending or deletion at the end.
+      if (newText.length > oldText.length) {
+        let added = newText.substring(oldText.length);
+        for (let char of added) {
+          if (/[a-zA-Z0-9]/.test(char)) {
+            const upperChar = char.toUpperCase();
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            const emoji = emojiEffects[upperChar] || '';
+            const friendlyText = friendlyMapping[upperChar] || upperChar;
+            playGiggleSound();
+            typedChars.push({
+              char: upperChar,
+              color: randomColor,
+              emoji: emoji,
+              mapping: friendlyText,
+              special: false
+            });
+          } else {
+            typedChars.push({ char: char, special: true });
+          }
+        }
+      } else if (newText.length < oldText.length) {
+        let countToRemove = oldText.length - newText.length;
+        for (let i = 0; i < countToRemove; i++) {
+          typedChars.pop();
+        }
+      }
+      renderEditor();
+    }
+
+    // Set up event listeners:
+    // Use beforeinput if available; otherwise fallback to input.
+    if ('onbeforeinput' in editor) {
+      editor.addEventListener('beforeinput', handleBeforeInput);
+    } else {
+      editor.addEventListener('input', handleInputFallback);
+    }
+
+    // Also attach a fallback for the keydown event for Backspace
+    // in case input event isn't fired.
+    editor.addEventListener('keydown', function(e) {
+      if (e.key === "Backspace") {
+        e.preventDefault();
+        typedChars.pop();
+        renderEditor();
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
         typedChars.push({ char: "\n", special: true });
         renderEditor();
       }
     });
 
-    // Focus the editor on load.
+    // Focus the editor on load and initialize with placeholder text.
     editor.focus();
-    // Initialize with placeholder text.
     renderEditor();
   </script>
 </body>
