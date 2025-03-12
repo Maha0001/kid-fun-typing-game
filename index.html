@@ -8,16 +8,19 @@
     body {
       font-family: 'Comic Sans MS', cursive;
       text-align: center;
+      /* Local universe image as background */
       background: url('universe.jpeg') no-repeat center center fixed;
       background-size: cover;
       margin: 20px;
     }
     h1 {
       font-size: 36px;
-      color: #fff; /* Changed heading color to white */
+      color: #fff; /* White heading for contrast */
     }
     #editor {
-      /* Removed the dashed border */
+      /* Remove border and outline */
+      border: none;
+      outline: none;
       padding: 20px;
       min-height: 150px;
       width: 80%;
@@ -59,7 +62,8 @@
 </head>
 <body>
   <h1>Kid’s Fun Typing Game</h1>
-  <div id="editor" contenteditable="false"></div>
+  <!-- Set editor as contenteditable so that mobile keyboards appear -->
+  <div id="editor" contenteditable="true"></div>
 
   <!-- Giggling sound effect -->
   <audio id="giggleSound" src="giggle.mp3"></audio>
@@ -68,7 +72,7 @@
     const editor = document.getElementById('editor');
     const giggleSound = document.getElementById('giggleSound');
 
-    // Arrays and mappings for fun effects
+    // Arrays and mappings for fun effects.
     const colors = ['#ff6347', '#4682b4', '#32cd32', '#ff69b4', '#ffa500', '#9932cc'];
     const emojiEffects = {
       'A': '🍎', 'B': '🐝', 'C': '🐱', 'D': '🐶', 'E': '🥚', 'F': '🐟', 'G': '🎸', 'H': '🏠', 'I': '🍦',
@@ -115,14 +119,14 @@
       '9': 'Nine'
     };
 
-    // Array to store each character object
+    // Array to store each character object so text persists.
     let typedChars = [];
 
-    // Create a styled span for each character
+    // Create a styled span for each character based on its properties.
     function createStyledSpan(item) {
       const span = document.createElement('span');
       span.className = 'char';
-      // If it's a newline, return a <br> element
+      // If it's a newline, return a <br> element.
       if (item.char === "\n") {
         return document.createElement('br');
       }
@@ -136,7 +140,20 @@
       return span;
     }
 
-    // Render the content of the editor
+    // Function to set the caret at the end of the editor.
+    function placeCaretAtEnd(el) {
+      el.focus();
+      if (typeof window.getSelection != "undefined" && typeof document.createRange != "undefined") {
+        let range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        let sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }
+
+    // Render the content of the editor from the typedChars array.
     function renderEditor() {
       editor.innerHTML = '';
       if (typedChars.length === 0) {
@@ -146,21 +163,25 @@
           editor.appendChild(createStyledSpan(item));
         });
       }
+      // If there's any text, place the caret at the end.
+      if (typedChars.length > 0) {
+        placeCaretAtEnd(editor);
+      }
     }
 
-    // Play giggling sound
+    // Play giggling sound.
     function playGiggleSound() {
       giggleSound.currentTime = 0;
       giggleSound.play();
     }
 
-    // Listen for keydown events
-    document.addEventListener('keydown', function(e) {
-      // If key is a character (letter, number, punctuation) and not a command key
+    // Listen for keydown events on the editor.
+    editor.addEventListener('keydown', function(e) {
+      // If key is a character (letter, number, punctuation) and not a command key.
       if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
         let char = e.key;
-        // If alphanumeric, add fun styling
+        // If alphanumeric, add fun styling.
         if (/[a-zA-Z0-9]/.test(char)) {
           const upperChar = char.toUpperCase();
           const randomColor = colors[Math.floor(Math.random() * colors.length)];
@@ -175,18 +196,18 @@
             special: false
           });
         } else {
-          // For non-alphanumeric keys (e.g. space, punctuation)
+          // For non-alphanumeric keys (e.g. space, punctuation).
           typedChars.push({ char: char, special: true });
         }
         renderEditor();
       }
-      // Backspace deletes the last character
+      // Backspace deletes the last character.
       if (e.key === "Backspace") {
         e.preventDefault();
         typedChars.pop();
         renderEditor();
       }
-      // Enter adds a newline
+      // Enter adds a newline.
       if (e.key === "Enter") {
         e.preventDefault();
         typedChars.push({ char: "\n", special: true });
@@ -194,7 +215,9 @@
       }
     });
 
-    // Initialize with placeholder text
+    // Focus the editor on load so that mobile keyboards appear.
+    editor.focus();
+    // Initialize with placeholder text.
     renderEditor();
   </script>
 </body>
