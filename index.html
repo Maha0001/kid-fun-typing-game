@@ -68,13 +68,14 @@
       border: none;
       background: transparent;
       font-size: 40px;
+      white-space: pre-wrap; /* Preserve newlines */
     }
   </style>
 </head>
 <body>
   <h1>Kid’s Fun Typing Game</h1>
   <div id="editor" contenteditable="true"></div>
-  <input id="mobileInput" type="text" />
+  <textarea id="mobileInput"></textarea>
   <audio id="giggleSound" src="giggle.mp3"></audio>
 
   <script>
@@ -249,7 +250,10 @@
       const newText = mobileInput.value;
       updateTypedCharsFromText(newText);
       renderEditor();
-      mobileInput.setSelectionRange(mobileInput.value.length, mobileInput.value.length);
+      // Add a small delay to ensure cursor moves to the end
+      setTimeout(() => {
+        mobileInput.setSelectionRange(mobileInput.value.length, mobileInput.value.length);
+      }, 10); // 10ms delay
     }
 
     function handleMobileCompositionEnd(e) {
