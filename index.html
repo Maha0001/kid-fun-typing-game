@@ -8,7 +8,6 @@
     body {
       font-family: 'Comic Sans MS', cursive;
       text-align: center;
-      /* Local universe image as background */
       background: url('universe.jpeg') no-repeat center center fixed;
       background-size: cover;
       margin: 20px;
@@ -17,9 +16,8 @@
       font-size: 36px;
       color: #fff;
     }
-    /* The editor container displays the fun styled text */
     #editor {
-      position: relative; /* for mobile overlay positioning */
+      position: relative;
       border: none;
       outline: none;
       padding: 20px;
@@ -59,7 +57,6 @@
       margin-left: 4px;
       color: #666;
     }
-    /* Hidden input for mobile mode: we overlay it over #editor */
     #mobileInput {
       position: absolute;
       top: 0;
@@ -76,17 +73,11 @@
 </head>
 <body>
   <h1>Kid’s Fun Typing Game</h1>
-  <!-- The editor div shows the fun styled text. -->
   <div id="editor" contenteditable="true"></div>
-  
-  <!-- The hidden input used only on mobile (it will be added dynamically if needed) -->
   <input id="mobileInput" type="text" />
-
-  <!-- Giggling sound effect -->
   <audio id="giggleSound" src="giggle.mp3"></audio>
 
   <script>
-    // Device detection based on user agent.
     function isMobile() {
       return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
@@ -95,7 +86,6 @@
     const giggleSound = document.getElementById('giggleSound');
     const mobileInput = document.getElementById('mobileInput');
 
-    // Fun styling arrays and friendly mappings.
     const colors = ['#ff6347', '#4682b4', '#32cd32', '#ff69b4', '#ffa500', '#9932cc'];
     const emojiEffects = {
       'A': '🍎', 'B': '🐝', 'C': '🐱', 'D': '🐶', 'E': '🥚', 'F': '🐟', 'G': '🎸', 'H': '🏠', 'I': '🍦',
@@ -112,10 +102,8 @@
       '4': 'Four', '5': 'Five', '6': 'Six', '7': 'Seven', '8': 'Eight', '9': 'Nine'
     };
 
-    // typedChars holds an array of objects for each character.
     let typedChars = [];
 
-    // Creates a styled span (or <br>) for a character.
     function createStyledSpan(item) {
       if (item.char === "\n") {
         return document.createElement('br');
@@ -132,7 +120,6 @@
       return span;
     }
 
-    // Places caret at end.
     function placeCaretAtEnd(el) {
       el.focus();
       if (window.getSelection && document.createRange) {
@@ -145,7 +132,6 @@
       }
     }
 
-    // Renders the typedChars into the editor.
     function renderEditor() {
       editor.innerHTML = '';
       if (typedChars.length === 0) {
@@ -155,16 +141,16 @@
           editor.appendChild(createStyledSpan(item));
         });
       }
-      placeCaretAtEnd(editor);
+      if (!isMobile()) {
+        placeCaretAtEnd(editor);
+      }
     }
 
-    // Plays giggling sound.
     function playGiggleSound() {
       giggleSound.currentTime = 0;
       giggleSound.play();
     }
 
-    // Simple diff: updates typedChars given a new text string (assumes appending or deletion at end).
     function updateTypedCharsFromText(newText) {
       const oldText = typedChars.map(item => item.char).join('');
       if (newText === oldText) return;
@@ -198,7 +184,6 @@
       }
     }
 
-    // --- Desktop Handlers (using editor div) ---
     function handleBeforeInput(e) {
       e.preventDefault();
       if (e.inputType === 'insertText' && e.data && e.data.length === 1) {
@@ -228,11 +213,13 @@
         renderEditor();
       }
     }
+
     function handleInputFallback(e) {
       const newText = editor.textContent;
       updateTypedCharsFromText(newText);
       renderEditor();
     }
+
     function handleCompositionEnd(e) {
       const finalText = editor.textContent;
       typedChars = [];
@@ -258,12 +245,13 @@
       renderEditor();
     }
 
-    // --- Mobile Handlers (using an overlay input) ---
     function handleMobileInput(e) {
       const newText = mobileInput.value;
       updateTypedCharsFromText(newText);
       renderEditor();
+      mobileInput.setSelectionRange(mobileInput.value.length, mobileInput.value.length);
     }
+
     function handleMobileCompositionEnd(e) {
       const finalText = mobileInput.value;
       typedChars = [];
@@ -287,7 +275,6 @@
         }
       }
       renderEditor();
-      // Clear mobileInput so new input appends.
       mobileInput.value = '';
     }
 
@@ -304,12 +291,9 @@
       }
     }
 
-    // --- Initialization ---
     if (isMobile()) {
-      // Mobile Mode:
-      // Ensure the editor container is relative (for absolute positioning of mobileInput).
+      editor.contentEditable = false;
       editor.style.position = 'relative';
-      // Style the mobile input to overlay the editor.
       mobileInput.style.display = 'block';
       mobileInput.style.position = 'absolute';
       mobileInput.style.top = '0';
@@ -321,17 +305,14 @@
       mobileInput.style.fontSize = '40px';
       mobileInput.style.border = 'none';
       mobileInput.style.background = 'transparent';
-      // When the editor is tapped, focus the mobile input.
       editor.addEventListener('click', () => {
         mobileInput.focus();
       });
       mobileInput.addEventListener('input', handleMobileInput);
       mobileInput.addEventListener('compositionend', handleMobileCompositionEnd);
       mobileInput.addEventListener('keydown', handleKeydown);
-      // Focus the mobile input initially.
       mobileInput.focus();
     } else {
-      // Desktop Mode:
       if ('onbeforeinput' in editor) {
         editor.addEventListener('beforeinput', handleBeforeInput);
       } else {
@@ -342,7 +323,6 @@
       editor.focus();
     }
 
-    // Render initial state.
     renderEditor();
   </script>
 </body>
